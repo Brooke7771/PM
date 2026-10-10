@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Мини-калькулятор баллов EMS</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚑</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans+Extra+Condensed:wght@500;600;700&family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF2F5; --sheet:#FFFFFF; --band:#F6F8FA; --ink:#16212C; --muted:#5E6C79; --line:#DCE3E9;
+  --red:#C8102E; --on-red:#FFFFFF; --check:#FFFFFF;
+  --cond:"Fira Sans Extra Condensed","Arial Narrow","Roboto Condensed",sans-serif;
+  --text:"Golos Text",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  color-scheme:light dark;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0F151B; --sheet:#172029; --band:#1C2732; --ink:#E6ECF1; --muted:#97A5B2; --line:#2A3743;
+    --red:#F0475A; --on-red:#1A0509; --check:#E6ECF1;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0F151B; --sheet:#172029; --band:#1C2732; --ink:#E6ECF1; --muted:#97A5B2; --line:#2A3743;
+  --red:#F0475A; --on-red:#1A0509; --check:#E6ECF1; color-scheme:dark;
+}
+:root[data-theme="light"]{color-scheme:light}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 8rem);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 1rem/1.45 var(--text)}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+button{font:inherit}
+
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--sheet);border-bottom:1px solid var(--line)}
+.livery{height:14px;background:conic-gradient(var(--red) 25%,var(--check) 0 50%,var(--red) 0 75%,var(--check) 0) 0 0/14px 14px}
+.top-in{max-width:46rem;margin:0 auto;padding:.6rem .75rem .7rem;display:grid;gap:.35rem}
+.title-row{display:flex;align-items:baseline;justify-content:space-between;gap:1rem}
+h1{font:700 1.35rem/1.1 var(--cond);margin:0}
+.title-row a{color:var(--red);font-size:.875rem;font-weight:500;white-space:nowrap}
+.total-row{display:flex;align-items:center;justify-content:space-between;gap:.75rem}
+.total{display:flex;align-items:baseline;gap:.4rem;min-width:0}
+.t-num{font:700 2.3rem/1 var(--cond);color:var(--red);font-variant-numeric:tabular-nums;display:inline-block;transform-origin:left bottom}
+.t-num.bump{animation:bump .25s ease-out}
+@keyframes bump{from{transform:scale(1.12)}to{transform:scale(1)}}
+.t-unit{font:600 1.1rem/1 var(--cond)}
+.actions{display:flex;gap:.5rem;flex:none}
+.btn{font:600 .9rem/1 var(--text);border-radius:999px;padding:.7rem 1rem;border:1px solid transparent;cursor:pointer;touch-action:manipulation}
+.btn.primary{background:var(--red);color:var(--on-red)}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn.ghost.armed{border-color:var(--red);color:var(--red)}
+
+main{max-width:46rem;margin:0 auto;padding:.75rem .75rem 1.5rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(6.5rem,1fr));gap:.5rem}
+.tile{display:grid;gap:.25rem;background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:.5rem .55rem .45rem;cursor:text}
+.tile.on{border-color:var(--red)}
+.tile-top{display:flex;justify-content:space-between;align-items:baseline;gap:.3rem}
+.lbl{font:600 .98rem/1.15 var(--cond)}
+.rt{font:600 .82rem/1 var(--cond);color:var(--red);white-space:nowrap}
+.tile input{width:100%;height:2.5rem;font:600 1.5rem/1 var(--cond);text-align:center;color:var(--ink);background:var(--band);border:1px solid var(--line);border-radius:8px;font-variant-numeric:tabular-nums;-moz-appearance:textfield;appearance:textfield;padding:0}
+.tile input:focus{border-color:var(--red);outline:none;box-shadow:0 0 0 2px color-mix(in srgb,var(--red) 30%,transparent)}
+.tile input::placeholder{color:var(--muted);opacity:.55}
+input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.eq{font:500 .85rem/1 var(--cond);color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.tile.on .eq{color:var(--ink)}
+
+.foot{margin:1rem 0 0;font-size:.85rem;color:var(--muted)}
+.foot p{margin:.2rem 0}
+
+.toast{position:fixed;left:50%;bottom:calc(1.25rem + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:20;background:var(--ink);color:var(--sheet);padding:.6rem 1rem;border-radius:999px;font-size:.9rem;max-width:calc(100% - 2rem);opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+
+.modal{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.45);display:grid;place-items:center;padding:1rem}
+.modal[hidden]{display:none}
+.modal-box{background:var(--sheet);border-radius:14px;padding:1.1rem;width:min(30rem,100%);display:grid;gap:.75rem}
+.modal-box h2{font:600 1.3rem/1.2 var(--cond);margin:0}
+.modal-box textarea{width:100%;min-height:12rem;font:400 .9rem/1.45 var(--text);color:var(--ink);background:var(--band);border:1px solid var(--line);border-radius:8px;padding:.6rem;resize:vertical}
+.modal-box .btn{justify-self:end}
+
+@media (prefers-reduced-motion:reduce){
+  .t-num.bump{animation:none}
+  .toast{transition:none}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="livery" aria-hidden="true"></div>
+  <div class="top-in">
+    <div class="title-row">
+      <h1>Баллы EMS, быстрый ввод</h1>
+      <a href="index.html">Полная версия</a>
+    </div>
+    <div class="total-row">
+      <div class="total" aria-live="polite">
+        <span class="t-num" id="total">0</span>
+        <span class="t-unit" id="unit">баллов</span>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn primary" id="copy">Отчёт</button>
+        <button type="button" class="btn ghost" id="reset">Сбросить</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="grid" id="grid"></div>
+  <div class="foot">
+    <p>Enter переводит на следующее поле. Отметки общие с полной версией.</p>
+    <p>📹 На всех скриншотах должна быть включена бодикамера.</p>
+  </div>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<div class="modal" id="modal" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <h2 id="modal-title">Скопируйте отчёт вручную</h2>
+    <textarea id="modal-text" readonly></textarea>
+    <button type="button" class="btn primary" id="modal-close">Закрыть</button>
+  </div>
+</div>
+
+<script>
+const ITEMS = [
+  { id:'pill_elsh',  short:'Таб ELSH',       pts:1,   report:'Таблетка, ELSH' },
+  { id:'pill_ss',    short:'Таб SS/PB',      pts:2,   report:'Таблетка, Sandy Shores / Paleto Bay' },
+  { id:'vax_elsh',   short:'Вак ELSH',       pts:2,   report:'Вакцина, ELSH' },
+  { id:'vax_ss',     short:'Вак SS/PB',      pts:3,   report:'Вакцина, Sandy Shores / Paleto Bay' },
+  { id:'pmp_day',    short:'ПМП день',       pts:7,   report:'ПМП днём' },
+  { id:'pmp_night',  short:'ПМП ночь',       pts:9,   report:'ПМП ночью' },
+  { id:'med_elsh',   short:'Справка ELSH',   pts:5,   report:'Медсправка, ELSH' },
+  { id:'med_ss',     short:'Справка SS/PB',  pts:5,   report:'Медсправка, Sandy Shores / Paleto Bay' },
+  { id:'duty',       short:'Дежурство',      pts:40,  report:'Ночное дежурство' },
+  { id:'ev_inter',   short:'Межфрак',        pts:50,  report:'Межфракционное мероприятие' },
+  { id:'ev_lecture', short:'Слушал лекцию',  pts:50,  report:'Прослушивание лекции' },
+  { id:'ev_admin',   short:'Победа адм.',    pts:100, report:'Победа в мероприятии от администрации' },
+  { id:'ev_dept',    short:'Отдел',          custom:true, report:'Мероприятие внутри отдела' },
+  { id:'in_lecture', short:'Провёл лекцию',  pts:25,  report:'Проведение лекции или сбора' },
+  { id:'in_report',  short:'Пров. отчёт',    pts:5,   report:'Проверенный отчёт' }
+];
+
+const KEY = 'ems-points-v1';
+
+function plural(n){
+  const a = Math.abs(n) % 100, b = a % 10;
+  if (a > 10 && a < 20) return 'баллов';
+  if (b === 1) return 'балл';
+  if (b > 1 && b < 5) return 'балла';
+  return 'баллов';
+}
+function load(){
+  const empty = { counts:{}, custom:{}, dutyStart:'00:00' };
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return empty;
+    const p = JSON.parse(raw);
+    return { counts:p.counts || {}, custom:p.custom || {}, dutyStart:p.dutyStart || '00:00' };
+  } catch (e) { return empty; }
+}
+function save(){
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+}
+function clamp(v, max){
+  v = Math.floor(Number(v));
+  if (!isFinite(v) || v < 0) return 0;
+  return Math.min(v, max);
+}
+
+let state = load();
+const els = {};
+const inputs = [];
+let lastTotal = null;
+
+function raw(it){ return it.custom ? (state.custom[it.id] || 0) : (state.counts[it.id] || 0); }
+function itemTotal(it){ return it.custom ? raw(it) : raw(it) * it.pts; }
+
+function build(){
+  const grid = document.getElementById('grid');
+  ITEMS.forEach((it, i) => {
+    const tile = document.createElement('label');
+    tile.className = 'tile';
+    tile.innerHTML = `
+      <span class="tile-top"><span class="lbl">${it.short}</span><span class="rt">${it.custom ? 'баллы' : '×' + it.pts}</span></span>
+      <input type="number" inputmode="numeric" min="0" max="${it.custom ? 9999 : 999}" placeholder="0" enterkeyhint="${i === ITEMS.length - 1 ? 'done' : 'next'}" aria-label="${it.custom ? 'Баллы' : 'Количество'}: ${it.report}">
+      <span class="eq">= 0</span>`;
+    const input = tile.querySelector('input');
+    input.addEventListener('focus', () => input.select());
+    input.addEventListener('input', () => {
+      if (it.custom) state.custom[it.id] = clamp(input.value, 9999);
+      else state.counts[it.id] = clamp(input.value, 999);
+      save();
+      update();
+    });
+    input.addEventListener('blur', () => update(true));
+    input.addEventListener('keydown', e => {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      const next = inputs[i + 1];
+      if (next) next.focus(); else input.blur();
+    });
+    inputs.push(input);
+    els[it.id] = { tile, input, eq: tile.querySelector('.eq') };
+    grid.appendChild(tile);
+  });
+}
+
+function update(force){
+  let total = 0;
+  ITEMS.forEach(it => {
+    const v = itemTotal(it);
+    total += v;
+    const e = els[it.id];
+    if (force || document.activeElement !== e.input) {
+      const r = raw(it);
+      e.input.value = r === 0 ? '' : r;
+    }
+    e.eq.textContent = '= ' + v;
+    e.tile.classList.toggle('on', v > 0);
+  });
+  const tEl = document.getElementById('total');
+  tEl.textContent = total;
+  document.getElementById('unit').textContent = plural(total);
+  if (lastTotal !== null && total !== lastTotal) {
+    tEl.classList.remove('bump');
+    void tEl.offsetWidth;
+    tEl.classList.add('bump');
+  }
+  lastTotal = total;
+}
+
+function buildReport(){
+  const lines = [];
+  let total = 0;
+  ITEMS.forEach(it => {
+    const v = itemTotal(it);
+    if (!v) return;
+    total += v;
+    lines.push(it.custom ? `${it.report}: ${v}` : `${it.report}: ${raw(it)} × ${it.pts} = ${v}`);
+  });
+  const date = new Date().toLocaleDateString('ru-RU');
+  return { total, text: `Баллы EMS за ${date}\n${lines.join('\n')}\n\nИтого: ${total} ${plural(total)}` };
+}
+
+let toastTimer;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+async function copyText(text){
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (e) {}
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    ta.remove();
+    return ok;
+  } catch (e) { return false; }
+}
+
+document.getElementById('copy').addEventListener('click', async () => {
+  const r = buildReport();
+  if (!r.total) { toast('Сначала впишите выполненную работу'); return; }
+  if (await copyText(r.text)) {
+    toast('Отчёт скопирован');
+  } else {
+    const m = document.getElementById('modal');
+    const ta = document.getElementById('modal-text');
+    ta.value = r.text;
+    m.hidden = false;
+    ta.focus();
+    ta.select();
+  }
+});
+document.getElementById('modal-close').addEventListener('click', () => {
+  document.getElementById('modal').hidden = true;
+  document.getElementById('copy').focus();
+});
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target.id === 'modal') e.currentTarget.hidden = true;
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.getElementById('modal').hidden = true;
+});
+
+const resetBtn = document.getElementById('reset');
+let resetTimer;
+resetBtn.addEventListener('click', () => {
+  if (!resetBtn.classList.contains('armed')) {
+    resetBtn.classList.add('armed');
+    resetBtn.textContent = 'Точно?';
+    resetTimer = setTimeout(() => { resetBtn.classList.remove('armed'); resetBtn.textContent = 'Сбросить'; }, 3000);
+    return;
+  }
+  clearTimeout(resetTimer);
+  resetBtn.classList.remove('armed');
+  resetBtn.textContent = 'Сбросить';
+  state.counts = {};
+  state.custom = {};
+  save();
+  update(true);
+  toast('Все отметки сброшены');
+});
+
+window.addEventListener('storage', e => {
+  if (e.key === KEY) { state = load(); update(true); }
+});
+
+build();
+update(true);
+</script>
+</body>
+</html>

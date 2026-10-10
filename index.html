@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Калькулятор баллов EMS</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚑</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fira+Sans+Extra+Condensed:wght@500;600;700&family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
@@ -40,6 +41,8 @@ button{font:inherit}
 header .wrap{padding-top:1.6rem;padding-bottom:1.25rem}
 h1{font:700 clamp(2rem,6.5vw,2.8rem)/1.05 var(--cond);margin:0 0 .45rem;letter-spacing:.005em}
 .lede{margin:0;color:var(--muted);max-width:52ch}
+.switch{margin:.6rem 0 0}
+.switch a{color:var(--red);font-weight:500}
 
 .sheet{background:var(--sheet);border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;padding:.9rem 1.1rem .7rem;background:var(--band);border-top:1px solid var(--line)}
@@ -136,6 +139,7 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
   <div class="wrap">
     <h1>Калькулятор баллов EMS</h1>
     <p class="lede">Отмечайте выполненную работу, итог посчитается сам. Отметки сохраняются в этом браузере.</p>
+    <p class="switch"><a href="mini.html">Мини-версия для быстрого ввода</a></p>
   </div>
 </header>
 
@@ -454,6 +458,10 @@ resetBtn.addEventListener('click', () => {
   save();
   update(true);
   toast('Все отметки сброшены');
+});
+
+window.addEventListener('storage', e => {
+  if (e.key === KEY) { state = load(); update(true); }
 });
 
 build();
